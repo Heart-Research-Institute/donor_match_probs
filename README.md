@@ -1,4 +1,4 @@
-# Data Processing and Analysis with SharePoint and SQL Server README
+# Match Probabilities for Donors from Transactions Data Import
 
 ## Overview
 This repository contains a Python script that provides a supplementary feature to aid in detecting whether donors listed in source data from third-party donation platforms already exist in HRI's database or not. Specifically, the script outputs a match probability for each donor's constituent ID found in HRI's database. Existing donors naturally have high probabilities whereas new donors are likely to have very low probabilities or even left as empty, indicating no possible matches.
