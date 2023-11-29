@@ -3,7 +3,7 @@
 ## Overview
 This repository contains a Python script that provides a supplementary feature to aid in detecting whether donors listed in source data from third-party donation platforms already exist in HRI's database or not. Specifically, the script outputs a match probability for each donor's constituent ID found in HRI's database. Existing donors naturally have high probabilities whereas new donors are likely to have very low probabilities or even left as empty, indicating no possible matches.
 
-The match probabilities are calculated via probabilistic entity linkage that implements Fellegi-Sunter model.
+The match probabilities are calculated via probabilistic entity linkage that implements Fellegi-Sunter model. In the context of this script, probabilities less than 70% are considered not good enough and vice versa. In the case of the former, then, manual verification and fix, if applicable, needs to be carried out.
 
 ## Features
 - **Database Interaction**: Connect to SQL Server and run queries.
