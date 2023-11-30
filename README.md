@@ -12,6 +12,32 @@ The match probabilities are calculated via probabilistic entity linkage that imp
 - **DuckDB and Splink Integration**: For data linking and probabilistic matching.
 - **Azure Key Vault**: Secure credential management.
 
+## Matching Criteria
+Match criteria based on below columns.
+-	`msnfp_customeridname` a.k.a. Donor
+- `emailaddress1` a.k.a. Email
+- `msnfp_originatingcampaignidname` a.k.a. Originating Campaign
+- `msnfp_designationidname` a.k.a. Primary Designation
+- `msnfp_appealidname` a.k.a. Appeal
+- `msnfp_paymenttypecodename` a.k.a. Payment Type
+- `msnfp_transaction_paymentmethodidname` a.k.a. Payment Method
+
+Hard exact match for the below columns.
+-	`msnfp_appealidname` a.k.a. Appeal
+-	`msnfp_transaction_paymentmethodidname` a.k.a. Payment Method
+
+Softer degree of match (still made to be quite strict but just not have to be exact match) for the below columns. As reference, their respective distance functions are also listed.
+- `msnfp_customeridname` a.k.a. Donor
+  - Jaro distance
+- `emailaddress1` a.k.a. Email
+  - Levenshtein distance
+- `msnfp_originatingcampaignidname` a.k.a. Originating Campaign
+  - Jaro-Winkler distance
+- `msnfp_designationidname` a.k.a. Primary Designation
+  - Jaro-Winkler distance
+- `msnfp_paymenttypecodename` a.k.a. Payment Type
+  - Jaro distance
+
 ## Prerequisites
 - Python 3.x
 - Libraries: os, pandas, numpy, io, calendar, datetime, time, pyodbc, splink, azure-identity, azure-keyvault-secrets, shareplum
