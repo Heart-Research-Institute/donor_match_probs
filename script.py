@@ -3,11 +3,13 @@ import pandas as pd
 # pd.set_option("display.max_rows", 500)
 # pd.set_option("display.max_columns", 500)
 import numpy as np
+import glob
 from io import (StringIO, BytesIO)
 import calendar
 import datetime
 import time
 import pyodbc
+import yaml
 from splink.duckdb.linker import DuckDBLinker
 import splink.duckdb.comparison_library as cl
 from azure.identity import DefaultAzureCredential
@@ -50,7 +52,7 @@ def run_SQL_query(query):
                 query_result = \
                 cursor.execute(query).fetchall()
             except: pass
-    if query_result != np.nan: break
+        if query_result != np.nan: break
     
     return query_result  
     
@@ -67,7 +69,8 @@ def run_window_SQL_query_for_match_probs(donor):
            T.msnfp_packageidname, T.msnfp_ccbrandcodename, 
            T.msnfp_paymenttypecodename, 
            T.msnfp_transaction_paymentmethodidname, 
-           T.transactioncurrencyidname, C.msnfp_constituentnumber                           
+           T.transactioncurrencyidname, C.msnfp_constituentnumber,
+           C.hri_alternativeconstituentnumber
     FROM dbo.msnfp_transaction AS T JOIN dbo.contact AS C 
     ON T.msnfp_customerid = C.contactid
     WHERE
@@ -218,20 +221,20 @@ for i in ["Braintree", "Benevity", "Good2Give", "Karma Currency", "UK Charities"
     globals()[f"folder_sharepoint_{i}"] = Site(f"{url_sharepoint}/{site_sharepoint}", version = Version.v365, 
                                                authcookie = auth_sharepoint) \
                                           .Folder(globals()[f"path_sharepoint_folder_{i}"])
-    globals()[f"df_{i.replace(" ", "")}"] = globals()[f"folder_sharepoint_{i}"].get_file(
+    globals()[f'df_{i.replace(" ", "")}'] = globals()[f"folder_sharepoint_{i}"].get_file(
         globals()[f"folder_sharepoint_{i}"].files["Name"][0]
     )
-    globals()[f"df_{i.replace(" ", "")}"] = StringIO(globals()[f"df_{i.replace(" ", "")}"].decode("utf-8"))
+    globals()[f'df_{i.replace(" ", "")}'] = StringIO(globals()[f'df_{i.replace(" ", "")}'].decode("utf-8"))
     if (i == "Braintree") | (i == "Karma Currency"):
-        globals()[f"df_{i.replace(" ", "")}"] = pd.read_csv(globals()[f"df_{i.replace(" ", "")}"])
+        globals()[f'df_{i.replace(" ", "")}'] = pd.read_csv(globals()[f'df_{i.replace(" ", "")}'])
     if i == "Good2Give":
-        globals()[f"df_{i.replace(" ", "")}"] = pd.read_csv(globals()[f"df_{i.replace(" ", "")}"], 
+        globals()[f'df_{i.replace(" ", "")}'] = pd.read_csv(globals()[f'df_{i.replace(" ", "")}'], 
                                                             skiprows = 2, skipfooter = 2, engine = "python")
     if i == "Benevity":
-        globals()[f"df_{i.replace(" ", "")}"] = pd.read_csv(globals()[f"df_{i.replace(" ", "")}"], 
+        globals()[f'df_{i.replace(" ", "")}'] = pd.read_csv(globals()[f'df_{i.replace(" ", "")}'], 
                                                             skiprows = 11, skipfooter = 4, engine = "python")
     if i == "UK Charities":
-        globals()[f"df_{i.replace(" ", "")}"] = pd.read_csv(globals()[f"df_{i.replace(" ", "")}"])
+        globals()[f'df_{i.replace(" ", "")}'] = pd.read_csv(globals()[f'df_{i.replace(" ", "")}'])
 path_sharepoint_folder_Insight_weekly = f"Shared Documents/Fundraising Operations/Single Giving/Insight/" \
                                         + f"Weekly Report Folder/{recon_month} {recon_year}"
 folder_sharepoint_Insight_weekly = Site(f"{url_sharepoint}/{site_sharepoint}", version = Version.v365, 
@@ -442,7 +445,7 @@ df_Insight_weekly["Identifier"] = "Insight - " + df_Insight_weekly["Customer Id"
 df_Insight_weekly["Post Code"] = np.select([df_Insight_weekly["Post Code"].astype("str").str.len() < 4], 
                                            ["0" + df_Insight_weekly["Post Code"].astype("str")],
                                            default = df_Insight_weekly["Post Code"].astype("str"))
-df_Insight_weekly = df_Insight_weekly.rename(columns = {"Bank Date": "Book Date", "Insight WP Number": "Related Constituent",
+df_Insight_weekly = df_Insight_weekly.rename(columns = {"Bank Date": "Book Date", "Insight WP Number": "hri_alternativeconstituentnumber",
                                                         "First name": "First Name", "SurName": "Last Name", "Address1": "Street 1", 
                                                         "Suburb": "City", "State": "State/Province", "Post Code": "ZIP/Postal Code", 
                                                         "Telephone": "Phone", "Email Address": "Email", "Donation Value $": "Amount", 
@@ -583,7 +586,7 @@ np.select([(df_transaction["Currency"] == "NZD") & (df_transaction["Data Entry R
 # Get & assign the highest matched probability of cons ID for each donor
 df_temp = df_transaction[["Amount", "Book Date", "Donor", "Email", "Originating Campaign", "Primary Designation", 
                           "Payment Schedule", "Appeal", "Data Entry Source", "Package", "Card Brand", 
-                          "Payment Type", "Payment Method", "Currency", "msnfp_constituentnumber"]] \
+                          "Payment Type", "Payment Method", "Currency", "hri_alternativeconstituentnumber"]] \
                         .rename(columns = \
                                {"Amount": "msnfp_amount", "Book Date": "msnfp_bookdate", 
                                 "Donor": "msnfp_customeridname", "Email": "emailaddress1", 
