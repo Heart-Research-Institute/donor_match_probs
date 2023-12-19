@@ -58,6 +58,7 @@ Softer degree of match (still made to be quite strict but just not have to be ex
 ## Repository Structure
  ```bash
  /activecampaign
+|   Data Import & Donor Prob Matching - Local Version    # To run the script locally
 │   README.md
 │   script.py    # Main Python script
 ```
